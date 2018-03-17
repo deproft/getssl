@@ -2188,14 +2188,16 @@ for d in $alldomains; do
                  | sed -e 's:=*$::g' -e 'y:+/:-_:')
       debug auth_key "$auth_key"
 
-      debug "adding dns via command: $DNS_ADD_COMMAND $d $auth_key"
-      if ! eval "$DNS_ADD_COMMAND" "$d" "$auth_key" ; then
-        error_exit "DNS_ADD_COMMAND failed for domain $d"
+      d_clean="`echo $d | sed 's/[*][.]//g'`"
+      d_file="`echo $d | sed 's/[*][.]/_wildcard./g'`"
+      debug "adding dns via command: $DNS_ADD_COMMAND ${d_clean} $auth_key"
+      if ! eval "$DNS_ADD_COMMAND" "${d_clean}" "$auth_key" ; then
+        error_exit "DNS_ADD_COMMAND failed for domain ${d_clean}"
       fi
 
       # find a primary / authoritative DNS server for the domain
       if [[ -z "$AUTH_DNS_SERVER" ]]; then
-        get_auth_dns "$d"
+        get_auth_dns "${d_clean}"
       else
         primary_ns="$AUTH_DNS_SERVER"
       fi
@@ -2207,8 +2209,6 @@ for d in $alldomains; do
       fi
 
       # generate a file with the current variables for the dns-challenge
-      d_clean="`echo $d | sed 's/[*][.]//g'`"
-      d_file="`echo $d | sed 's/[*][.]/_wildcard./g'`"
       cat > "$TEMP_DIR/dns_verify/$d_file" <<- _EOF_
 			token="${token}"
 			uri="${uri}"
