@@ -1169,7 +1169,7 @@ json_get() { # get values from json
   else
     if [[ ! -z "$6" ]]; then
       full=$(json_awk "$1")
-      section=$(echo "$full" | grep "\"$2\"" | grep "\"$3\"" | grep "\"$4\"" | awk -F"," '{print $2}')
+      section=$(echo "$full" | grep "\"$2\"" | grep "\"$3\"" | grep -F "\"$4\"" | awk -F"," '{print $2}')
       echo "$full" | grep "^..${5}\",$section" | awk '{print $2}' | tr -d '"'
     elif [[ ! -z "$5" ]]; then
       full=$(json_awk "$1")
@@ -2207,11 +2207,13 @@ for d in $alldomains; do
       fi
 
       # generate a file with the current variables for the dns-challenge
-      cat > "$TEMP_DIR/dns_verify/$d" <<- _EOF_
+      d_clean="`echo $d | sed 's/[*][.]//g'`"
+      d_file="`echo $d | sed 's/[*][.]/_wildcard./g'`"
+      cat > "$TEMP_DIR/dns_verify/$d_file" <<- _EOF_
 			token="${token}"
 			uri="${uri}"
 			keyauthorization="${keyauthorization}"
-			d="${d}"
+			d="${d_clean}"
 			primary_ns="${primary_ns}"
 			auth_key="${auth_key}"
 			_EOF_
